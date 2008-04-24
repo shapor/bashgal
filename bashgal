@@ -1,0 +1,127 @@
+#!/bin/bash
+thumbx=133 thumby=100
+sheetx=1200 sheety=15000
+heights=(480 600 800 1024)
+thumbdir=.th sheetdir=.sh
+index=index.html
+tmpsheet=/tmp/sheet-$$.jpg tmprow=/tmp/row-$$.jpg tmpimg=/tmp/img-$$.jpg tmpindex=/tmp/index-$$.html
+defaultres=600
+# end configuration section
+
+function debug {
+	return 0
+}
+function usage {
+	echo "$0: usage $0 [directory]"
+	exit $1
+}
+
+[[ $# -gt 1 ]] && usage 255
+[[ $# -eq 0 ]] || pushd $1 >/dev/null || exit 1
+
+[[ -d $thumbdir ]] || mkdir $thumbdir || exit 2
+for res in ${heights[*]}; do
+	[[ -d .$res ]] || mkdir -p .$res/.html || exit 3
+	echo "<html><body><style>div{height:100px;margin:1;padding:0;position:relative;overflow:hidden;float:left}</style>" >$tmpindex.$res
+	for size in ${heights[*]}; do
+		[[ $size == $res ]] && echo -n "$size " || echo -n "<a href='.$size.$index'>$size</a> "
+	done >>$tmpindex.$res
+done
+
+numfiles=0
+for filename in *.[jJ][pP][gG]; do
+	debug && echo -n "$filename: "
+	jhead -autorot $filename | grep ^Modified: >/dev/null && echo -n "rotated "
+	[[ -s $thumbdir/$filename ]] || convert -scale x$thumby $filename $thumbdir/$filename || continue
+	filelist[$numfiles]=$filename
+	let numfiles++
+	for res in ${heights[*]}; do
+		debug && echo -n "$res "
+		[[ -s .$res/$filename ]] || convert -scale x$res $filename .$res/$filename
+	done
+	debug && echo
+done
+
+# The rest is basically an optimization to take advantage of spriting css
+percol=$(($sheetx / $thumbx))
+perrow=$(($sheety / $thumby))
+persheet=$(($perrow * $percol))
+# generate thumbnail sheets up to sheetx x sheety size
+[[ -d $sheetdir ]] || mkdir $sheetdir || exit 10
+sheet=0 row=0 col=0 file=0
+while [[ $file -lt $numfiles ]]; do
+	filename=${filelist[$file]}
+	thumb=$thumbdir/$filename
+	debug && echo -n "$filename "
+
+	# generate the thumbnail sheets
+	convert -extent 133x100 $thumb $tmpimg
+	convert +append $tmprow $tmpimg $tmprow 2>/dev/null
+	filex[$file]=$((col * $thumbx))
+	filey[$file]=$((row * $thumby))
+	let col++
+	if [[ $col -eq $percol ]]; then
+		debug && echo 
+		convert -append $tmpsheet $tmprow $tmpsheet 2>/dev/null
+		rm $tmprow
+		col=0
+		let row++
+		if [[ $row -eq $perrow ]]; then
+			debug && echo saving sheet $sheet
+			mv $tmpsheet $sheetdir/$sheet.jpg
+			row=0
+			let sheet++
+		fi
+	fi
+
+	# generate the html in .1024/.html/file.jpg.html
+	for res in ${heights[*]}; do
+		prev= next=
+		[[ $file -ne 0 ]] && prev=${filelist[$((file - 1))]}
+		nf=$((file + 1))
+		[[ $file -ne $((numfiles - 1)) ]] && next=${filelist[$((file + 1))]}
+		htmlfile=.$res/.html/$filename.html
+		xsize=$(jhead .$res/$filename | grep ^Res  | awk '{print $3}')
+		cat >$htmlfile <<EOF
+<html><head><title>$filename</title>
+<script language="JavaScript">
+prev=new Image();
+next=new Image();
+function f(){
+EOF
+		[[ $prev ]] && echo "prev.src='../$prev';" >>$htmlfile
+		[[ $next ]] && echo "next.src='../$next';" >>$htmlfile
+		cat >>$htmlfile <<EOF
+}
+</script></head><body onLoad="f()">
+<a href='../../.$res.$index'>^ up to thumbnails ^</a> 
+EOF
+		[[ $prev ]] && echo "<a href=$prev.html>&lt;- prev</a> " >>$htmlfile || echo -n "&lt;- prev " >>$htmlfile
+		[[ $next ]] && echo "<a href=$next.html>next -&gt;</a> " >>$htmlfile || echo -n "next -&gt; " >>$htmlfile
+		for size in ${heights[*]}; do
+			[[ $size == $res ]] && echo -n "$size " || echo -n "<a href='../../.$size/.html/$filename.html'>$size</a> "
+		done >>$htmlfile
+		echo "<p><img border=0 width=$xsize height=$res src=../$filename><p>" >>$htmlfile
+		jhead $filename|sed 's/$/<br>/' >>$htmlfile
+	
+		#generate the 600.index.html
+		sheet=$((file / $persheet))
+		thumbw=$(jhead .th/$filename | grep ^Res  | awk '{print $3}')
+		echo "<div style='width:${thumbw}px'><a href='.$res/.html/$filename.html'><img border=0 alt='$filename' src='.sh/$sheet.jpg' style='left:-${filex[$file]}px;top:-${filey[$file]}px;position:absolute'></a></div>" >>$tmpindex.$res
+	done
+
+	let file++
+done
+convert -append $tmpsheet $tmprow $tmpsheet 2>/dev/null
+rm $tmprow 2>/dev/null
+debug && echo && echo saving sheet $sheet
+mv $tmpsheet $sheetdir/$sheet.jpg 2>/dev/null
+# generate html
+for res in ${heights[*]}; do
+	echo "</body></html>" >>$tmpindex.$res
+	mv $tmpindex.$res .$res.$index
+done
+rm $index 2>/dev/null
+ln -s .$defaultres.$index $index
+#end of meat
+[[ $# -eq 1 ]] && popd >/dev/null
