@@ -1,10 +1,10 @@
 #!/bin/bash
 thumbx=133 thumby=100
-sheetx=1200 sheety=15000
+sheetx=1200 sheety=10000
 heights=(480 600 800 1024)
-thumbdir=.th sheetdir=.sh
-index=index.html
-tmpsheet=/tmp/sheet-$$.jpg tmprow=/tmp/row-$$.jpg tmpimg=/tmp/img-$$.jpg tmpindex=/tmp/index-$$.html
+thumbdir=.th sheetdir=.shtest
+index=test.html
+tmpsheet=/tmp/sheet-$$.jpg tmprow=/tmp/row-$$.jpg tmpindex=/tmp/index-$$.html
 defaultres=600
 # end configuration section
 
@@ -43,42 +43,35 @@ for filename in *.[jJ][pP][gG]; do
 done
 
 # The rest is basically an optimization to take advantage of spriting css
-percol=$(($sheetx / $thumbx))
-perrow=$(($sheety / $thumby))
-persheet=$(($perrow * $percol))
 # generate thumbnail sheets up to sheetx x sheety size
 [[ -d $sheetdir ]] || mkdir $sheetdir || exit 10
-sheet=0 row=0 col=0 file=0
+sheet=0 cury=0 curx=0 file=0
 while [[ $file -lt $numfiles ]]; do
 	filename=${filelist[$file]}
 	thumb=$thumbdir/$filename
-	debug && echo -n "$filename "
+	twidth=$(jhead $thumb | grep ^Res  | awk '{print $3}')
 
 	# generate the thumbnail sheets
-	convert -extent 133x100 $thumb $tmpimg
-	convert +append $tmprow $tmpimg $tmprow 2>/dev/null
-	filex[$file]=$((col * $thumbx))
-	filey[$file]=$((row * $thumby))
-	let col++
-	if [[ $col -eq $percol ]]; then
+	if [[ $((curx + twidth)) -gt $sheetx ]]; then
 		debug && echo 
 		convert -append $tmpsheet $tmprow $tmpsheet 2>/dev/null
 		rm $tmprow
-		col=0
-		let row++
-		if [[ $row -eq $perrow ]]; then
+		curx=0
+		cury=$((cury + thumby))
+		if [[ $((cury + thumby)) -gt $sheety ]]; then
 			debug && echo saving sheet $sheet
 			mv $tmpsheet $sheetdir/$sheet.jpg
-			row=0
+			cury=0
 			let sheet++
 		fi
 	fi
+	debug && echo -n "$filename "
+	convert +append $tmprow $thumb $tmprow 2>/dev/null
 
 	# generate the html in .1024/.html/file.jpg.html
 	for res in ${heights[*]}; do
 		prev= next=
 		[[ $file -ne 0 ]] && prev=${filelist[$((file - 1))]}
-		nf=$((file + 1))
 		[[ $file -ne $((numfiles - 1)) ]] && next=${filelist[$((file + 1))]}
 		htmlfile=.$res/.html/$filename.html
 		xsize=$(jhead .$res/$filename | grep ^Res  | awk '{print $3}')
@@ -105,11 +98,11 @@ EOF
 		jhead $filename|sed 's/$/<br>/' >>$htmlfile
 	
 		#generate the 600.index.html
-		thumbw=$(jhead .th/$filename | grep ^Res  | awk '{print $3}')
-		echo "<div style='width:${thumbw}px'><a href='.$res/.html/$filename.html'><img border=0 alt='$filename' src='.sh/$sheet.jpg' style='left:-${filex[$file]}px;top:-${filey[$file]}px;position:absolute'></a></div>" >>$tmpindex.$res
+		echo "<div style='width:${twidth}px'><a href='.$res/.html/$filename.html'><img border=0 alt='$filename' src='$sheetdir/$sheet.jpg' style='left:-${curx}px;top:-${cury}px;position:absolute'></a></div>" >>$tmpindex.$res
 	done
 
 	let file++
+	curx=$((curx + twidth))
 done
 convert -append $tmpsheet $tmprow $tmpsheet 2>/dev/null
 rm $tmprow 2>/dev/null
