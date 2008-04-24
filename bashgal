@@ -105,7 +105,6 @@ EOF
 		jhead $filename|sed 's/$/<br>/' >>$htmlfile
 	
 		#generate the 600.index.html
-		sheet=$((file / $persheet))
 		thumbw=$(jhead .th/$filename | grep ^Res  | awk '{print $3}')
 		echo "<div style='width:${thumbw}px'><a href='.$res/.html/$filename.html'><img border=0 alt='$filename' src='.sh/$sheet.jpg' style='left:-${filex[$file]}px;top:-${filey[$file]}px;position:absolute'></a></div>" >>$tmpindex.$res
 	done
