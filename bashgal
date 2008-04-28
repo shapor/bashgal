@@ -2,21 +2,17 @@
 thumbx=133 thumby=100
 sheetx=1200 sheety=10000
 heights=(480 600 800 1024)
-thumbdir=.th sheetdir=.shtest
-index=test.html
+thumbdir=.th sheetdir=.sh
+index=index.html
 tmpsheet=/tmp/sheet-$$.jpg tmprow=/tmp/row-$$.jpg tmpindex=/tmp/index-$$.html
 defaultres=600
 # end configuration section
 
 function debug {
-	return 0
-}
-function usage {
-	echo "$0: usage $0 [directory]"
-	exit $1
+	return 0 # 0=enable, 1=disable debugging output
 }
 
-[[ $# -gt 1 ]] && usage 255
+[[ $# -gt 1 ]] && { echo "$0: usage $0 [directory]"; exit 1; }
 [[ $# -eq 0 ]] || pushd $1 >/dev/null || exit 1
 
 [[ -d $thumbdir ]] || mkdir $thumbdir || exit 2
