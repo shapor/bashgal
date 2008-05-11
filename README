@@ -1,0 +1,98 @@
+bashgal README
+Author: Shapor Naghibzadeh <shapor@gmail.com>
+Date: 11 May 2007
+URL: http://shapor.com/bashgal
+
+Overview
+--------
+bashgal is simple bash shell script which generates html thumbnail galleries
+using the "convert" and "jhead" command-line utilities.  It requires no
+special server-side script to run to view image galleries because everything
+is pre-rendered.  As of this writing, it offers several features:
+- fixed-height thumbnail of configurable height
+- multiple image sizes which can be switched between by the user at any time
+- thumbnails fill the entire browser efficiently
+- css spriting of thumbnails to produce fewer server round trip and overall
+  smaller data tranfer
+- locally previewable galleries by accessing images locally (e.g. 
+  file:///home/shapor/pics/blah/index.html)
+- preloading of previous and next images using JavaScript. (This is *not*
+  required and the gallery functions just fine without JavaScript).
+- JPEG header EXIF data extraction and 
+
+I feel this combination of features makes a better user experience than pretty much all the big online
+photo hosts.
+
+License
+-------
+GNU Public License version 2
+Please feel free to fork and modify this on GitHub (http://github.com), but
+don't forget to give credit :)
+
+Requirements
+------------
+- GraphicsMagick (http://www.graphicsmagick.org) or ImageMagick for the
+  "convert" utility.  GraphicsMagick is strongly preferred for performance
+  considerations.  If wish to use ImageMagick you must change
+  convert="gm convert" to convert="convert" in the config section of the
+  script.
+- jhead for exif data extraction
+
+History
+-------
+bashgal started as an alias in my .bashrc because I got sick of typing a
+command which looked a lot like this every time I would upload a new set of
+photos to my server:
+$ for i in *.jpg; do convert -scale x100 $i t-$i; echo "<a href=$i><img
+border=0 src=t-$i></a>" >>index.html; done
+
+Even this simple one-liner gives you a gallery which is better than the
+majority of the on-line photo hosts.  One of my pet-peeves is a tiny window
+surrounded by white in my huge browser window, requiring me to scroll.  Ugh.
+
+Details
+-------
+One of the problems which arises with this simple one-liner approach is speed.
+This is due to the large number of server round-trips required to transfer the
+many small thumbnails.  This is due to the fact that HTTP and browers don't
+support pipe-lining of server requests.  Also, the HTTP and JPEG headers end
+up costing at least a few hundred extra bytes for each thumbnail.  This
+doesn't sound like much at first, but when you have a gallery with hundreds or 
+thousands of images, it adds up quickly.  Not to mention, the round-trips
+*kill* high latency connections such as cell-phones.
+
+The answer: CSS image spriting.
+
+If you're unsure what I mean by this, go a quick google search and look at the
+results page.  Don't just look at the results, click on view source.  It looks
+like the clever guys over at Google have figured this out as well:
+http://www.google.com/images/nav_logo3.png
+
+I actually got the idea from my girlfriend, who was using it for javascript
+dropdown menus, which made me realize you can effectively "chop up" large
+image files using CSS.  My roundtrip issue would be solved.
+
+By combining all the thumbnails in to large thumbnail "sheets" (again using
+the trusty "convert" program to append images to rows, and rows together in to
+sheets), not only did the round trips drop, the over-all data transfer did as
+well.  This is due to the additional compression allowed, especially when
+"bracketing" photographs, and fewer number of headers.
+
+Some browsers don't like especially large images, so I set up some limits for
+the sizes of the sheets.  It is nice if you make the sheets approximately the
+width of the browser because they load top-down.
+
+Configurations
+--------------
+TODO, but this is pretty self explaritory by editing the script :)
+
+Future (aka TODO)
+-----------------
+- add links to movie files (mpg, avi, etc)
+- add support for thumbnailing (and possibly embedding movies in html pages)
+- remove Javascript for prev/next image loading (just use an undisplay image
+  with css?)
+- links to download full-size and RAW images (if provided)
+- better documentation:
+	- performance comparison with and without CSS spriting
+	- performance data on GraphicsMagick vs ImageMagick
