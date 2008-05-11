@@ -18,16 +18,18 @@ is pre-rendered.  As of this writing, it offers several features:
   file:///home/shapor/pics/blah/index.html)
 - preloading of previous and next images using JavaScript. (This is *not*
   required and the gallery functions just fine without JavaScript).
-- JPEG header EXIF data extraction and 
+- JPEG header EXIF data extraction
+- auto-rotation of veritcal images
 
-I feel this combination of features makes a better user experience than pretty much all the big online
-photo hosts.
+This combination of features makes a better user experience than pretty
+much all the big online photo hosts.  All you need is a place to host your
+plain html/jpeg files.
 
 License
 -------
 GNU Public License version 2
 Please feel free to fork and modify this on GitHub (http://github.com), but
-don't forget to give credit :)
+don't forget to give credit and/or send beer :)
 
 Requirements
 ------------
@@ -37,6 +39,15 @@ Requirements
   convert="gm convert" to convert="convert" in the config section of the
   script.
 - jhead for exif data extraction
+On a debian-based system, just run "apt-get install graphicsmagick jhead" as
+root.
+
+Usage
+-----
+bashgal [path]
+
+Without specifying a path, bashgal works in the current directory.  Just load
+the index.html in creates in the directory to see the output when finished.
 
 History
 -------

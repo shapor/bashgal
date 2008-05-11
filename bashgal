@@ -1,12 +1,16 @@
 #!/bin/bash
+# bashgal - http://shapor.com/bashgal
+# Author: Shapor Naghibzadeh <shapor@gmail.com>
+
+# configuration section
+convert="gm convert" # GraphicsMagick (http://www.graphicsmagick.org) > ImageMagick
 thumbx=133 thumby=100
 sheetx=1200 sheety=10000
 heights=(480 600 800 1024)
 thumbdir=.th sheetdir=.sh
 index=index.html
-tmpsheet=/tmp/sheet-$$.jpg tmprow=/tmp/row-$$.jpg tmpindex=/tmp/index-$$.html
 defaultres=600
-convert="gm convert" # GraphicsMagick (http://www.graphicsmagick.org) > ImageMagick
+tmpsheet=/tmp/sheet-$$.jpg tmprow=/tmp/row-$$.jpg tmpindex=/tmp/index-$$.html
 # end configuration section
 
 function debug {
@@ -112,5 +116,4 @@ for res in ${heights[*]}; do
 done
 rm $index 2>/dev/null
 ln -s .$defaultres.$index $index
-#end of meat
 [[ $# -eq 1 ]] && popd >/dev/null
