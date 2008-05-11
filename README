@@ -47,7 +47,7 @@ Usage
 bashgal [path]
 
 Without specifying a path, bashgal works in the current directory.  Just load
-the index.html in creates in the directory to see the output when finished.
+the [path]/index.html in a browser see the output.
 
 History
 -------
@@ -65,12 +65,12 @@ Details
 -------
 One of the problems which arises with this simple one-liner approach is speed.
 This is due to the large number of server round-trips required to transfer the
-many small thumbnails.  This is due to the fact that HTTP and browers don't
-support pipe-lining of server requests.  Also, the HTTP and JPEG headers end
-up costing at least a few hundred extra bytes for each thumbnail.  This
-doesn't sound like much at first, but when you have a gallery with hundreds or 
+many small thumbnails because HTTP and browers don't support pipe-lining of
+server requests.  Additionally, the individual HTTP and JPEG headers end up
+costing at least a few hundred extra bytes for each thumbnail.  This doesn't
+sound like much at first, but when you have a gallery with hundreds or
 thousands of images, it adds up quickly.  Not to mention, the round-trips
-*kill* high latency connections such as cell-phones.
+alone *kill* high latency connections such as cell-phones.
 
 The answer: CSS image spriting.
 
@@ -79,28 +79,29 @@ results page.  Don't just look at the results, click on view source.  It looks
 like the clever guys over at Google have figured this out as well:
 http://www.google.com/images/nav_logo3.png
 
-I actually got the idea from my girlfriend, who was using it for javascript
-dropdown menus, which made me realize you can effectively "chop up" large
-image files using CSS.  My roundtrip issue would be solved.
+I actually got the idea from a web designer (www.joellebelmonte.com), who was
+using the technique for javascript dropdown menus, which made me realize you
+can effectively "chop up" large image files using CSS.  My roundtrip issue
+would be solved.
 
 By combining all the thumbnails in to large thumbnail "sheets" (again using
 the trusty "convert" program to append images to rows, and rows together in to
 sheets), not only did the round trips drop, the over-all data transfer did as
 well.  This is due to the additional compression allowed, especially when
-"bracketing" photographs, and fewer number of headers.
+"bracketing" photographs, and of course the drastically reduced header traffic.
 
 Some browsers don't like especially large images, so I set up some limits for
-the sizes of the sheets.  It is nice if you make the sheets approximately the
-width of the browser because they load top-down.
+the sizes of the sheets.  It is also nice if you make the sheets approximately
+the width of the browser because the pixels load top-down.
 
 Configurations
 --------------
-TODO, but this is pretty self explaritory by editing the script :)
+TODO, but this is pretty self explanatory by editing the script :)
 
 Future (aka TODO)
 -----------------
 - add links to movie files (mpg, avi, etc)
-- add support for thumbnailing (and possibly embedding movies in html pages)
+- add support for thumbnailing movies and possibly embedding in html
 - remove Javascript for prev/next image loading (just use an undisplay image
   with css?)
 - links to download full-size and RAW images (if provided)
