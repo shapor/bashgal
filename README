@@ -9,11 +9,10 @@ bashgal is simple bash shell script which generates html thumbnail galleries
 using the "convert" and "jhead" command-line utilities.  It requires no
 special server-side script to run to view image galleries because everything
 is pre-rendered.  As of this writing, it offers several features:
-- fixed-height thumbnail of configurable height
+- fixed-height thumbnails which fill the browser efficiently
 - multiple image sizes which can be switched between by the user at any time
-- thumbnails fill the entire browser efficiently
-- css spriting of thumbnails to produce fewer server round trip and overall
-  smaller data tranfer
+- css spriting of thumbnails to produce fewer server round trips and overall
+  smaller data tranfer (see http://shapor.com/bashgal)
 - locally previewable galleries by accessing images locally (e.g. 
   file:///home/shapor/pics/blah/index.html)
 - preloading of previous and next images using JavaScript. (This is *not*
@@ -47,7 +46,8 @@ Usage
 bashgal [path]
 
 Without specifying a path, bashgal works in the current directory.  Just load
-the [path]/index.html in a browser see the output.
+the [path]/index.html in a browser see the output.  [path] should contain a
+bunch of jpeg files.  It does not work recursively (yet).
 
 History
 -------
@@ -74,21 +74,20 @@ alone *kill* high latency connections such as cell-phones.
 
 The answer: CSS image spriting.
 
-If you're unsure what I mean by this, go a quick google search and look at the
+If you're unsure what I mean by this, do a quick Google search and look at the
 results page.  Don't just look at the results, click on view source.  It looks
 like the clever guys over at Google have figured this out as well:
 http://www.google.com/images/nav_logo3.png
 
 I actually got the idea from a web designer (www.joellebelmonte.com), who was
 using the technique for javascript dropdown menus, which made me realize you
-can effectively "chop up" large image files using CSS.  My roundtrip issue
-would be solved.
+can effectively "chop up" large image files using CSS.
 
 By combining all the thumbnails in to large thumbnail "sheets" (again using
 the trusty "convert" program to append images to rows, and rows together in to
 sheets), not only did the round trips drop, the over-all data transfer did as
 well.  This is due to the additional compression allowed, especially when
-"bracketing" photographs, and of course the drastically reduced header traffic.
+"bracketing" photographs, and of course the drastically reduced headers.
 
 Some browsers don't like especially large images, so I set up some limits for
 the sizes of the sheets.  It is also nice if you make the sheets approximately
