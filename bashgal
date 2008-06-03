@@ -3,7 +3,7 @@
 # Author: Shapor Naghibzadeh <shapor@gmail.com>
 
 # configuration section
-convert="gm convert" # GraphicsMagick (http://www.graphicsmagick.org) > ImageMagick
+convert="nice gm convert" # GraphicsMagick (http://www.graphicsmagick.org) > ImageMagick
 thumbx=133 thumby=100
 sheetx=1200 sheety=10000
 heights=(480 600 800 1024)
