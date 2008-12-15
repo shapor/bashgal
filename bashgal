@@ -24,7 +24,7 @@ function debug {
 
 [[ -d $thumbdir ]] || mkdir $thumbdir || exit 2
 for res in ${heights[*]}; do
-	[[ -d .$res ]] || mkdir -p .$res/.html || exit 3
+	[[ -d .$res/.html ]] || mkdir -p .$res/.html || exit 3
 	echo "<html><body><style>div{height:100px;margin:1;padding:0;position:relative;overflow:hidden;float:left}</style>" >$tmpindex.$res
 	for size in ${heights[*]}; do
 		[[ $size == $res ]] && echo -n "$size " || echo -n "<a href='.$size.$index'>$size</a> "
