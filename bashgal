@@ -19,14 +19,40 @@ function debug {
 	return 0 # 0=enable, 1=disable debugging output
 }
 
-[[ $# -gt 1 ]] && { echo "$0: usage $0 [directory]"; exit 1; }
+function usage {
+	echo "$0: usage $0 [-x <width>] [-y <height>] [-t <title>] [-h] [directory]"
+	echo "  [-x <width>] 	thumbnail width (default: 133)"
+	echo "  [-y <height>] 	thumbnail height (default: 100)"
+	echo "  [-t <title>] 	sets the title (default: none)"
+	echo "  [-h]	 	displays help (this message)"
+	echo "  [directory]	directory to run bashgal on"
+}
+err=0
+title=
+while getopts "x:y:t:" v; do
+	case "$v" in
+		x)	[[ OPTARG -gt 0 ]] || { echo "error: arg $v takes only non-zero integer arguments"; let err++; continue; }
+			thumbx=$OPTARG
+			;;
+		y)	[[ OPTARG -gt 0 ]] || { echo "error: arg $v takes only non-zero integer arguments"; let err++; continue; }
+			thumby=$OPTARG
+			;;
+		t)	title="$OPTARG"
+			;;
+	esac
+done
+shift $((OPTIND - 1))
+[[ $# -gt 1 ]] && { usage; exit 1; }
 [[ $# -eq 0 ]] || pushd $1 >/dev/null || exit 1
 
 [[ -d $thumbdir ]] || mkdir $thumbdir || exit 2
+
+[[ -z $title ]] || titled="$title - "
 for res in ${heights[*]}; do
 	[[ -d .$res/.html ]] || mkdir -p .$res/.html || exit 3
-	echo "<html><body><style>div{height:100px;margin:1;padding:0;position:relative;overflow:hidden;float:left}</style>" >$tmpindex.$res
-	echo -n "<div style='width:100%;height:1.2em'>" >>$tmpindex.$res
+	echo "<html><head><title>$title</title></head>" >$tmpindex.$res
+	echo "<body><style>div{height:100px;margin:1;padding:0;position:relative;overflow:hidden;float:left}</style>" >>$tmpindex.$res
+	echo -n "<div style='width:100%;height:1.2em'>$titled" >>$tmpindex.$res
 	for size in ${heights[*]}; do
 		[[ $size == $res ]] && echo -n "$size " || echo -n "<a href='.$size.$index'>$size</a> "
 	done >>$tmpindex.$res
