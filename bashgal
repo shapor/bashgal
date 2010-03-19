@@ -116,6 +116,15 @@ debug && echo && echo saving sheet $sheet
 mv $tmpsheet $sheetdir/$sheet.jpg 2>/dev/null
 # generate html
 for res in ${heights[*]}; do
+	if [[ $(ls *.thm 2>/dev/null|wc -l) -gt 0 ]]; then
+		echo "<div>Movies: </div>" >>$tmpindex.$res
+		for file in *.thm; do
+			mpg="$(basename $file .thm).mpg"
+			if [[ -e $mpg ]]; then
+				echo "<div><a href='$mpg'><img border=0 src='$file'></a></div>" >>$tmpindex.$res
+			fi
+		done
+	fi
 	echo "</body></html>" >>$tmpindex.$res
 	mv $tmpindex.$res .$res.$index
 done
