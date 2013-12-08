@@ -124,6 +124,29 @@ while [[ $file -lt $numfiles ]]; do
 prev=new Image();
 next=new Image();
 function f(){
+	document.onkeydown = checkKey;
+
+	function checkKey(e) {
+		e = e || window.event;
+
+		var sendTo = "";
+		switch (e.keyCode) {
+			case 38: /* Up */
+				return
+			case 39: /* Right */
+			  sendTo = "$next.html";
+			  break;
+			case 40: /* Down */
+				return
+			case 37: /* Left */
+			  sendTo = "$prev.html";
+			  break;
+			default: return
+		}
+		if (sendTo != ".html") {
+			window.location.href = sendTo;
+		}
+	}
 EOF
 		[[ $prev ]] && echo "prev.src='../$prev';" >>"$htmlfile"
 		[[ $next ]] && echo "next.src='../$next';" >>"$htmlfile"
