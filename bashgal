@@ -69,10 +69,11 @@ for filename in *.[jJ][pP][gG]; do
 	for res in ${heights[*]}; do
 		debug && echo -n "$res "
 		if [[ ! -s .$res/$filename ]]; then
-			$convert -scale x$res "$filename" ".$res/$filename"
+			$convert -scale x$res "$filename" ".$res/$filename" &
 			$fadvise ".$res/$filename" 2>/dev/null
 		fi
 	done
+	wait
 	$fadvise "$filename" 2>/dev/null
 	debug && echo
 done
@@ -89,7 +90,11 @@ while [[ $file -lt $numfiles ]]; do
 	# generate the thumbnail sheets
 	if [[ $((curx + twidth)) -gt $sheetx ]]; then
 		debug && echo 
-		$convert -append $tmpsheet $tmprow $tmpsheet 2>/dev/null
+		if [[ ! -e $tmpsheet ]]; then
+			cp $tmprow $tmpsheet
+		else
+			$convert -append $tmpsheet $tmprow $tmpsheet
+		fi
 		rm $tmprow
 		curx=0
 		cury=$((cury + thumby))
@@ -101,7 +106,11 @@ while [[ $file -lt $numfiles ]]; do
 		fi
 	fi
 	debug && echo -n "$filename "
-	$convert +append $tmprow "$thumb" $tmprow 2>/dev/null
+	if [[ ! -e $tmprow ]]; then
+		cp "$thumb" $tmprow
+	else
+		$convert +append $tmprow "$thumb" $tmprow 2>/dev/null
+	fi
 
 	# generate the html in .1024/.html/file.jpg.html
 	for res in ${heights[*]}; do
@@ -138,7 +147,11 @@ EOF
 	let file++
 	curx=$((curx + twidth))
 done
-$convert -append $tmpsheet $tmprow $tmpsheet 2>/dev/null
+if [[ ! -e $tmpsheet ]]; then
+	cp $tmprow $tmpsheet
+else
+	$convert -append $tmpsheet $tmprow $tmpsheet
+fi
 rm $tmprow 2>/dev/null
 debug && echo && echo saving sheet $sheet
 mv $tmpsheet $sheetdir/$sheet.jpg 2>/dev/null
