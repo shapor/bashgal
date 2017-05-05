@@ -170,5 +170,5 @@ for res in ${heights[*]}; do
 	mv $tmpindex.$res .$res.$index
 done
 rm $index 2>/dev/null
-ln -s .$defaultres.$index $index
+cp .$defaultres.$index $index
 [[ $# -eq 1 ]] && popd >/dev/null
