@@ -9,7 +9,7 @@ fadvise="nice fadvise -dontneed "
 thumbx=133 thumby=100
 sheetx=1200 sheety=10000
 heights=(480 600 800 1024)
-thumbdir=.th sheetdir=.sh
+thumbdir=.th sheetdir=.sh jsdir=.js
 index=index.html
 defaultres=600
 tmpsheet=/tmp/sheet-$$.jpg tmprow=/tmp/row-$$.jpg tmpindex=/tmp/index-$$.html
@@ -46,6 +46,46 @@ shift $((OPTIND - 1))
 [[ $# -eq 0 ]] || pushd $1 >/dev/null || exit 1
 
 [[ -d $thumbdir ]] || mkdir $thumbdir || exit 2
+
+[[ -d $jsdir ]] || mkdir $jsdir || exit 2
+cat >$jsdir/swipedetect.js << EOF
+function swipedetect(el, callback){
+    var touchsurface = el, swipedir, startX, startY, distX, distY, threshold = 150,
+    restraint = 100, allowedTime = 300, elapsedTime, startTime,
+    handleswipe = callback || function(swipedir){}
+
+    touchsurface.addEventListener('touchstart', function(e){
+        var touchobj = e.changedTouches[0]
+        swipedir = 'none'
+        dist = 0
+        startX = touchobj.pageX
+        startY = touchobj.pageY
+        startTime = new Date().getTime()
+        e.preventDefault()
+    }, false)
+
+    touchsurface.addEventListener('touchmove', function(e){
+        e.preventDefault()
+    }, false)
+
+    touchsurface.addEventListener('touchend', function(e){
+        var touchobj = e.changedTouches[0]
+        distX = touchobj.pageX - startX
+        distY = touchobj.pageY - startY
+        elapsedTime = new Date().getTime() - startTime
+        if (elapsedTime <= allowedTime){
+            if (Math.abs(distX) >= threshold && Math.abs(distY) <= restraint){
+                swipedir = (distX < 0)? 'left' : 'right'
+            }
+            else if (Math.abs(distY) >= threshold && Math.abs(distX) <= restraint){
+                swipedir = (distY < 0)? 'up' : 'down'
+            }
+        }
+        handleswipe(swipedir)
+        e.preventDefault()
+    }, false)
+}
+EOF
 
 [[ -z $title ]] || titled="$title - "
 for res in ${heights[*]}; do
@@ -121,6 +161,7 @@ while [[ $file -lt $numfiles ]]; do
 		xsize=$($jhead ".$res/$filename" 2>/dev/null | awk '($1 == "Resolution") {print $3}')
 		cat >"$htmlfile" <<EOF
 <html><head><title>$filename</title>
+<script type="text/javascript" src="../../$jsdir/swipedetect.js"></script>
 <script language="JavaScript">
 prev=new Image();
 next=new Image();
@@ -129,8 +170,17 @@ EOF
 		[[ $prev ]] && echo "prev.src='../$prev';" >>"$htmlfile"
 		[[ $next ]] && echo "next.src='../$next';" >>"$htmlfile"
 		cat >>"$htmlfile" <<EOF
+var el = document.getElementById('page')
+swipedetect(el, function(swipedir){
+EOF
+		[[ $prev ]] && echo "  if (swipedir == 'right') window.location.href = '$prev.html';" >>"$htmlfile"
+		[[ $next ]] && echo "  if (swipedir == 'left') window.location.href = '$next.html';" >>"$htmlfile"
+		cat >>"$htmlfile" <<EOF
+  if (swipedir == 'down') window.location.href = '../../.$res.$index';
+  if (swipedir == 'none') window.location.href = '../../$filename';
+})
 }
-</script></head><body onLoad="f()">
+</script></head><body id=page onLoad="f()">
 <a href='../../.$res.$index'>^ up to thumbnails ^</a> 
 EOF
 		[[ $prev ]] && echo "<a href='$prev.html'>&lt;- prev</a> " >>"$htmlfile" || echo -n "&lt;- prev " >>"$htmlfile"
