@@ -91,7 +91,7 @@ EOF
 for res in ${heights[*]}; do
 	[[ -d .$res/.html ]] || mkdir -p .$res/.html || exit 3
 	echo "<html><head><title>$title</title></head>" >$tmpindex.$res
-	echo "<body><style>div{height:100px;margin:1;padding:0;position:relative;overflow:hidden;float:left}</style>" >>$tmpindex.$res
+	echo "<body><style>div{height:${thumby}px;margin:1;padding:0;position:relative;overflow:hidden;float:left}</style>" >>$tmpindex.$res
 	echo -n "<div style='width:100%;height:1.2em'>$titled" >>$tmpindex.$res
 	for size in ${heights[*]}; do
 		[[ $size == $res ]] && echo -n "$size " || echo -n "<a href='.$size.$index'>$size</a> "
@@ -166,6 +166,29 @@ while [[ $file -lt $numfiles ]]; do
 prev=new Image();
 next=new Image();
 function f(){
+	document.onkeydown = checkKey;
+
+	function checkKey(e) {
+		e = e || window.event;
+
+		var sendTo = "";
+		switch (e.keyCode) {
+			case 38: /* Up */
+				return
+			case 39: /* Right */
+			  sendTo = "$next.html";
+			  break;
+			case 40: /* Down */
+				return
+			case 37: /* Left */
+			  sendTo = "$prev.html";
+			  break;
+			default: return
+		}
+		if (sendTo != ".html") {
+			window.location.href = sendTo;
+		}
+	}
 EOF
 		[[ $prev ]] && echo "prev.src='../$prev';" >>"$htmlfile"
 		[[ $next ]] && echo "next.src='../$next';" >>"$htmlfile"
